@@ -1,4 +1,4 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify, abort
 import json
 import pymongo
 from bson import json_util
@@ -24,12 +24,31 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
+### TEMPORARY ARRAY OF DICTIONARIES FOR DB SIMULATION
+### WILL NEED TO CHANGE THIS TO A MONGODB SOLUTION
+grades = [
+    {
+        'id' : 1,
+        'course' : u'Net Apps',
+        'course number' : 4564,
+        'grade percentage' : 100
+    }
+]
+
 app = Flask(__name__)
 
-@app.route("/")
+@app.route('/calculator/api/v1/grades', methods=['GET'])
 @requires_auth
-def hello():
-    return "Hello World!"
+def get_grades():
+    return jsonify({'grades': grades})
+
+@app.route('/calculator/api/v1/grades/<int:class_id>', methods=['GET'])
+@requires_auth
+def get_grade(class_id):
+    grade = [grade for grade in grades if grade['id'] == class_id]
+    if len(grade) == 0:
+        abort(404)
+    return jsonify({'grade' : grade[0]})
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True)
