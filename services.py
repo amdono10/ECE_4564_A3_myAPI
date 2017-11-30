@@ -1,4 +1,5 @@
 from flask import Flask, request, Response, jsonify, abort
+from flask_discoverer import Discoverer, advertise
 import json
 import pymongo
 from bson import json_util
@@ -36,15 +37,18 @@ grades = [
 ]
 
 app = Flask(__name__)
+discoverer = Discoverer(app)
 
 @app.route('/calculator/api/v1/grades', methods=['GET'])
 @requires_auth
 def get_grades():
+    '''Route to get all grades for a student'''
     return jsonify({'grades': grades})
 
 @app.route('/calculator/api/v1/grades/<int:class_id>', methods=['GET'])
 @requires_auth
 def get_grade(class_id):
+    '''Route to get the grade for a single class'''
     grade = [grade for grade in grades if grade['id'] == class_id]
     if len(grade) == 0:
         abort(404)
