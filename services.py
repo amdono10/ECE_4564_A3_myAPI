@@ -40,6 +40,22 @@ app = Flask(__name__)
 discoverer = Discoverer(app)
 mongoClient = MongoClient('localhost', 27017)
 db = mongoClient.grades
+collection = db.users
+
+user_credentials = [{"username" : "Adam",
+                     "password" : "secret"},
+                    {"username" : "Brendan",
+                     "password" : "secret"},
+                    {"username" : "Brandon",
+                     "password" : "secret"}]
+
+userLib = db.libs
+userLib.insert_many(user_credentials)
+
+for i in userLib.find():
+    user = i["username"]
+    if user == "Adam" or user == "Brendan" or user == "Brandon":
+        print(user)
 
 def mongoToJson(data):
     """Convert Mongo objects to JSON"""
@@ -60,6 +76,15 @@ def get_grade(class_id):
     if len(grade) == 0:
         abort(404)
     return jsonify({'grade' : grade[0]})
+
+#@app.route('/canvas/api/v1/file_upload', methods=['POST'])
+#@requires_auth
+#def upload_file(file):
+
+# @app.route('/canvas/api/v1/file_download', methods=['GET'])
+# @requires_auth
+# def download_file(file_name):
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True)
