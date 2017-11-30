@@ -5,7 +5,7 @@ import pymongo
 from bson import json_util
 from bson.objectid import ObjectId
 from functools import wraps
-#from pymongo import Connection
+from pymongo import MongoClient
 
 ### NEED TO UPDATE THIS FUNCTION FOR ACTUAL USERNAMES AND PASSWORDS
 def check_auth(username, password):
@@ -38,6 +38,13 @@ grades = [
 
 app = Flask(__name__)
 discoverer = Discoverer(app)
+mongoClient = MongoClient('localhost', 27017)
+db = mongoClient.grades
+
+def mongoToJson(data):
+    """Convert Mongo objects to JSON"""
+    return json.dumps(data,  default=json_util.default)
+
 
 @app.route('/calculator/api/v1/grades', methods=['GET'])
 @requires_auth
