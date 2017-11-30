@@ -7,24 +7,6 @@ from bson.objectid import ObjectId
 from functools import wraps
 from pymongo import MongoClient
 
-### NEED TO UPDATE THIS FUNCTION FOR ACTUAL USERNAMES AND PASSWORDS
-def check_auth(username, password):
-    return username == 'admin' and password == 'secret'
-
-def authenticate():
-    return Response('Could not verify your access level for that URL.\n'
-                    'You have to login with proper credentials', 401,
-                    {'WWW-Authenticate' : 'Basic realm="Login Required"'})
-
-def requires_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
-        return f(*args, **kwargs)
-    return decorated
-
 ### TEMPORARY ARRAY OF DICTIONARIES FOR DB SIMULATION
 ### WILL NEED TO CHANGE THIS TO A MONGODB SOLUTION
 grades = [
@@ -51,6 +33,29 @@ user_credentials = [{"username" : "Adam",
 
 userLib = db.libs
 userLib.insert_many(user_credentials)
+
+def check_auth(username, password):
+    for i in userLib.find():
+        user = i["username"]
+        passw = i["password"]
+        if username == user and passw == password:
+            return true
+    return false
+
+def authenticate():
+    return Response('Could not verify your access level for that URL.\n'
+                    'You have to login with proper credentials', 401,
+                    {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
+
 
 for i in userLib.find():
     user = i["username"]
