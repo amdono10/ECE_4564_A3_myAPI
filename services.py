@@ -7,8 +7,7 @@ from bson.objectid import ObjectId
 from functools import wraps
 from pymongo import MongoClient
 
-### TEMPORARY ARRAY OF DICTIONARIES FOR DB SIMULATION
-### WILL NEED TO CHANGE THIS TO A MONGODB SOLUTION
+
 grades = [
     {
         'id' : 1,
@@ -17,6 +16,28 @@ grades = [
         'grade percentage' : 100
     }
 ]
+
+from six.moves import input
+from zeroconf import ServiceBrowser, Zeroconf
+
+
+class MyListener(object):
+    def remove_service(self, zeroconf, type, name):
+        print("Service %s removed" % (name,))
+
+    def add_service(self, zeroconf, type, name):
+        info = zeroconf.get_service_info(type, name)
+        # print name, info.get_name(), info.server,
+        print name, info
+
+
+zeroconf = Zeroconf()
+listener = MyListener()
+browser = ServiceBrowser(zeroconf, "_http._tcp.local.", listener)
+try:
+    input("Press enter to exit...\n\n")
+finally:
+    zeroconf.close()
 
 header = {"Authorization": "Bearer 4511~hNgxEqiPIYBBsV6jwwogaa1Jit4cBsPhFKOzPFjRpzws7qhhZd2PP5MUlt2uPhLI"}
 
@@ -79,7 +100,7 @@ def get_grades():
     #defualt is 100 for each course
     for item in course_list_obj.json():
         course_list.append({item["id"]: {'name': item["name"], 'grade':100 })
-    
+
     return course_list
 
 @app.route('/calculator/api/v1/grades/<int:class_id>', methods=['GET'])
@@ -89,8 +110,8 @@ def get_grade(class_id):
     grade = [grade for grade in grades if grade['id'] == class_id]
     if len(grade) == 0:
         abort(404)
-    return jsonify({'grade' : grade[0]})                        
-                           
+    return jsonify({'grade' : grade[0]})
+
 #@app.route('/canvas/api/v1/file_upload', methods=['POST'])
 #@requires_auth
 #def upload_file(file):
