@@ -6,6 +6,7 @@ from bson import json_util
 from bson.objectid import ObjectId
 from functools import wraps
 from pymongo import MongoClient
+import requests
 
 ### TEMPORARY ARRAY OF DICTIONARIES FOR DB SIMULATION
 ### WILL NEED TO CHANGE THIS TO A MONGODB SOLUTION
@@ -37,12 +38,13 @@ userLib = db.libs
 userLib.insert_many(user_credentials)
 
 def check_auth(username, password):
-    for i in userLib.find():
-        user = i["username"]
-        passw = i["password"]
-        if username == user and passw == password:
-            return true
-    return false
+    return username == "admin" and password == "secret"
+    # for i in userLib.find():
+    #     user = i["username"]
+    #     passw = i["password"]
+    #     if username == user and passw == password:
+    #         return true
+    # return false
 
 def authenticate():
     return Response('Could not verify your access level for that URL.\n'
@@ -59,10 +61,10 @@ def requires_auth(f):
     return decorated
 
 
-for i in userLib.find():
-    user = i["username"]
-    if user == "Adam" or user == "Brendan" or user == "Brandon":
-        print(user)
+# for i in userLib.find():
+#     user = i["username"]
+#     if user == "Adam" or user == "Brendan" or user == "Brandon":
+#         print(user)
 
 def mongoToJson(data):
     """Convert Mongo objects to JSON"""
@@ -75,18 +77,23 @@ def get_grades():
     '''Route to get all grades for a student'''
     course_list_obj = requests.get('https://canvas.vt.edu/api/v1/courses', headers = header)
     course_list = []
+    print(course_list_obj)
 
     #defualt is 100 for each course
     for item in course_list_obj.json():
-        course_list.append({item["id"]: {'name': item["name"], 'grade':100 })
-    
-    return course_list
+        #course_list.append({item["id"]: {'name': item["name"], 'grade':100 })
+        obj = {item["id"] : {"name" : item["name"], 'grade' : 0}}
+        course_list.append(obj)
+
+    return jsonify({'grades' : course_list})
 
 @app.route('/calculator/api/v1/grades/<int:class_id>', methods=['GET'])
 @requires_auth
 def get_grade(class_id):
     '''Route to get the grade for a single class'''
-    grade = [grade for grade in grades if grade['id'] == class_id]
+    url = 'https://canvas.vt.edu/api/v1/courses/' + class_id + '/assignments'
+    r = request.get(url, headers=header)
+    #grade = [grade for grade in grades if grade['id'] == class_id]
     if len(grade) == 0:
         abort(404)
     return jsonify({'grade' : grade[0]})                        
@@ -99,6 +106,14 @@ def get_grade(class_id):
 # @requires_auth
 # def download_file(file_name):
 
+@app.route('/canvas/api/v1/send', methods=['POST'])
+@requires_auth
+def send_grade(grade, course_id):
+    grade = request.json['grade']
+    cid = request.json['id']
+    for item in grades:
+        if item['id'] == cid:
+            item['id']['grade'] = grade
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True)
