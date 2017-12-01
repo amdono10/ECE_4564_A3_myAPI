@@ -18,6 +18,8 @@ grades = [
     }
 ]
 
+header = {"Authorization": "Bearer 4511~hNgxEqiPIYBBsV6jwwogaa1Jit4cBsPhFKOzPFjRpzws7qhhZd2PP5MUlt2uPhLI"}
+
 app = Flask(__name__)
 discoverer = Discoverer(app)
 mongoClient = MongoClient('localhost', 27017)
@@ -71,7 +73,14 @@ def mongoToJson(data):
 @requires_auth
 def get_grades():
     '''Route to get all grades for a student'''
-    return jsonify({'grades': grades})
+    course_list_obj = requests.get('https://canvas.vt.edu/api/v1/courses', headers = header)
+    course_list = []
+
+    #defualt is 100 for each course
+    for item in course_list_obj.json():
+        course_list.append({item["id"]: {'name': item["name"], 'grade':100 })
+    
+    return course_list
 
 @app.route('/calculator/api/v1/grades/<int:class_id>', methods=['GET'])
 @requires_auth
@@ -80,8 +89,8 @@ def get_grade(class_id):
     grade = [grade for grade in grades if grade['id'] == class_id]
     if len(grade) == 0:
         abort(404)
-    return jsonify({'grade' : grade[0]})
-
+    return jsonify({'grade' : grade[0]})                        
+                           
 #@app.route('/canvas/api/v1/file_upload', methods=['POST'])
 #@requires_auth
 #def upload_file(file):
