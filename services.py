@@ -9,18 +9,14 @@ from pymongo import MongoClient
 import requests
 
 
-grades = [
-    {
-        'id' : 1,
-        'course' : u'Net Apps',
-        'course number' : 4564,
-        'grade percentage' : 100
-    }
-]
+course_list = []
 
 from six.moves import input
 from zeroconf import ServiceBrowser, Zeroconf
 
+address = '\xc0\xa8\x00\x0f'
+ipv4 = ':'.join(str(ord(i)) for i in address)
+print (ipv4)
 
 class MyListener(object):
     def remove_service(self, zeroconf, type, name):
@@ -29,7 +25,7 @@ class MyListener(object):
     def add_service(self, zeroconf, type, name):
         info = zeroconf.get_service_info(type, name)
         # print name, info.get_name(), info.server,
-        print name, info
+        print (name, info)
 
 
 zeroconf = Zeroconf()
@@ -102,9 +98,9 @@ def get_grades():
 
     #defualt is 100 for each course
     for item in course_list_obj.json():
-        course_list.append({item["id"]: {'name': item["name"], 'grade':100 })
+        course_list.append({"id": item["id"], 'name': item["name"], 'grade':100})
 
-    return course_list
+    return jsonify({'grades': course_list})
 
 @app.route('/calculator/api/v1/grades/<int:class_id>', methods=['GET'])
 @requires_auth
@@ -136,3 +132,10 @@ def send_grade(grade, course_id):
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True)
+
+@app.route('/LED', methods=['POST'])
+@requires_auth
+def LED():
+    #contact the LED pi
+    payload = {"status":requst.args.get("status"), "color":requst.args.get("color"), "intensity":requst.args.get("intensity")}
+    r = requests.post(ipv4, data=payload)
