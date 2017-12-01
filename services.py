@@ -128,7 +128,7 @@ def send_grade(grade, course_id):
     cid = request.json['id']
     for item in grades:
         if item['id'] == cid:
-            item['id']['grade'] = grade
+            item['grade'] = grade
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True)
